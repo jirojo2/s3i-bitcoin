@@ -48,6 +48,7 @@ public class BitcoinPlayground {
 	public void run() {
 		//createWallet(netParams, walletPrefix);
 		
+		/*
 		// Single transaction
 		//Address address = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // Josi
 		//Address address = Address.fromBase58(netParams, "mjzn7TW98zhWoguqS4nDmnDoJpvqEEdnwm"); // Jorge
@@ -59,19 +60,15 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
-		/*
 		// Multisignature NM tx
-		Address addressC = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // C Josi
-		Address addressV = Address.fromBase58(netParams, "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"); // V Pepe
-		Address addressJ = Address.fromBase58(netParams, "mpgprRYUE4bzdqDgbDoUy9eWHqiFsw8T6S"); // J Juez
-		String finalReceiver = addressV.toBase58();
 		Coin coin = Coin.parseCoin("0.01");
 		
 		List<String> pubKeyList = new ArrayList<>();
-		pubKeyList.add(addressV.toBase58());
-		pubKeyList.add(addressC.toBase58());
-		pubKeyList.add(addressJ.toBase58());
+		pubKeyList.add("0276f54a9914e3a26e3431f4fb38766b3076b18cad3d39046b5ee71185da0375be"); // V Pepe
+		pubKeyList.add("0332898099418814a4022c9999bd4cf2f73810eedc5dbdb412690913a99cb37839"); // C Josi
+		pubKeyList.add("03258f48893c359d0f573e8ece07dee26e4afdccbf42eee61c67f802d58ed2e597"); // J Juez
 		
 		List<ECKey> keyList = new ArrayList<>();
 		for (String pubKeyHex : pubKeyList) {
@@ -99,11 +96,11 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
 		
-		// NM - Step 2
 		/*
-		String T1Hash = "...";
+		// NM - Step 2
+		String T1Hash = "c6fbe96c6db9312c2daf15c258d4ad3dd213219eae125c88a1bede55607ff44c";
+		String finalReceiver = "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"; // V pepe
 		
 		try {
 			Transaction T1 = receiveTransaction(netParams, T1Hash);
@@ -115,6 +112,9 @@ public class BitcoinPlayground {
 			TransactionInput input2 = T2.addInput(output1);
 			Address finalAddress = Address.fromBase58(netParams, finalReceiver);
 			T2.addOutput(value2, finalAddress);
+			
+			TransactionSignature signature_1 = sign1(netParams, walletPrefix, T2, output1);
+			System.out.println("signature: " + bytesToHex(signature_1.encodeToBitcoin()));
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -153,7 +153,7 @@ public class BitcoinPlayground {
 		}
 		System.out.println("issued keys: ");
 		for (ECKey key: wallet.getIssuedReceiveKeys()) {
-			System.out.println("  key: " + key.toAddress(netParams));
+			System.out.println("  key: " + key.toAddress(netParams) + " " + key.getPublicKeyAsHex());
 		}
 		System.out.println("balance: " + wallet.getBalance().toFriendlyString());
 	}
@@ -236,4 +236,14 @@ public class BitcoinPlayground {
 		return null;
 	}
 
+	public static String bytesToHex(byte[] bytes) {
+		char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[bytes.length * 2];
+		for ( int j = 0; j < bytes.length; j++ ) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
 }
