@@ -1,9 +1,11 @@
 package es.upm.dit.s3i;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +17,12 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
@@ -42,26 +48,31 @@ public class BitcoinPlayground {
 	public void run() {
 		//createWallet(netParams, walletPrefix);
 		
+		/*
 		// Single transaction
-		Address address = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // Josi
+		//Address address = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // Josi
 		//Address address = Address.fromBase58(netParams, "mjzn7TW98zhWoguqS4nDmnDoJpvqEEdnwm"); // Jorge
-		Coin coin = Coin.parseCoin("0.001");
+		Address address = Address.fromBase58(netParams, "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"); // Pepe
+		Coin coin = Coin.parseCoin("0.01");
 		try {
 			send(netParams, coin, address);
 		} catch (InsufficientMoneyException | ExecutionException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
-		/*
 		// Multisignature NM tx
-		Address address = Address.fromBase58(netParams, "mjzn7TW98zhWoguqS4nDmnDoJpvqEEdnwm"); // Jorge
-		Coin coin = Coin.parseCoin("0.001");
+		Address addressC = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // C Josi
+		Address addressV = Address.fromBase58(netParams, "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"); // V Pepe
+		Address addressJ = Address.fromBase58(netParams, "mpgprRYUE4bzdqDgbDoUy9eWHqiFsw8T6S"); // J Juez
+		String finalReceiver = addressV.toBase58();
+		Coin coin = Coin.parseCoin("0.01");
 		
 		List<String> pubKeyList = new ArrayList<>();
-		// Josi
-		// Jorge
-		// Marta
+		pubKeyList.add(addressV.toBase58());
+		pubKeyList.add(addressC.toBase58());
+		pubKeyList.add(addressJ.toBase58());
 		
 		List<ECKey> keyList = new ArrayList<>();
 		for (String pubKeyHex : pubKeyList) {
@@ -79,13 +90,32 @@ public class BitcoinPlayground {
 			OutputStream stream = new FileOutputStream(file);
 			stream.write(T1.bitcoinSerialize());
 			stream.close();
-			
 		} catch (InsufficientMoneyException | ExecutionException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// NM - Step 2
+		/*
+		String T1Hash = "...";
+		
+		try {
+			Transaction T1 = receiveTransaction(netParams, T1Hash);
+			TransactionOutput output1 = getMultiSigOutput(T1);
+			Coin fee2 = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.multiply(2);
+			Coin value2 = output1.getValue().subtract(fee2);
+			
+			Transaction T2 = new Transaction(netParams);
+			TransactionInput input2 = T2.addInput(output1);
+			Address finalAddress = Address.fromBase58(netParams, finalReceiver);
+			T2.addOutput(value2, finalAddress);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -157,4 +187,53 @@ public class BitcoinPlayground {
 		future.get();
 		return T1;
 	}
+	
+	private Transaction receiveTransaction(NetworkParameters netParams, String transactionHash) throws IOException {
+		File file = new File(walletDirectory, transactionHash + ".tx");
+		int size = (int) file.length();
+		byte[] bytes = new byte[size];
+		InputStream stream = new FileInputStream(file);
+		stream.read(bytes);
+		stream.close();
+		return new Transaction(netParams, bytes);
+	}
+	
+	private TransactionOutput getMultiSigOutput(Transaction transaction) {
+		for (TransactionOutput output: transaction.getOutputs()) {
+			Script script = output.getScriptPubKey();
+			if (script.isSentToMultiSig()) {
+				return output;
+			}
+		}
+		return null;
+	}
+	
+	private TransactionSignature sign1(NetworkParameters netParams, String signer, Transaction T2, TransactionOutput output1) {
+		WalletAppKit kit = new WalletAppKit(netParams, walletDirectory, signer);
+		kit.startAsync();
+		kit.awaitRunning();
+		
+		Wallet wallet = kit.wallet();
+		
+		Script script = output1.getScriptPubKey();
+		ECKey myKey = getMyKey(script, wallet);
+		
+		Transaction.SigHash type = Transaction.SigHash.ALL;
+		Sha256Hash sighash = T2.hashForSignature(0, script, type, false);
+		ECKey.ECDSASignature ecdsaSignature = myKey.sign(sighash);
+		
+		TransactionSignature transactionSignature = new TransactionSignature(ecdsaSignature, type, false);
+		return transactionSignature;
+	}
+	
+	private ECKey getMyKey(Script script, Wallet wallet) {
+		for (ECKey key : script.getPubKeys()) {
+			ECKey mime = wallet.findKeyFromPubKey(key.getPubKey());
+			if (mime != null) {
+				return mime;
+			}
+		}
+		return null;
+	}
+
 }
