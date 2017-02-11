@@ -62,6 +62,7 @@ public class BitcoinPlayground {
 		}
 		*/
 		
+		/*
 		// Multisignature NM tx
 		Coin coin = Coin.parseCoin("0.01");
 		
@@ -96,8 +97,8 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
-		/*
 		// NM - Step 2
 		String T1Hash = "c6fbe96c6db9312c2daf15c258d4ad3dd213219eae125c88a1bede55607ff44c";
 		String finalReceiver = "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"; // V pepe
@@ -120,7 +121,6 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
 	}
 	
 	private void createAddress(NetworkParameters netParams) {
