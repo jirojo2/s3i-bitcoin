@@ -48,7 +48,6 @@ public class BitcoinPlayground {
 	public void run() {
 		//createWallet(netParams, walletPrefix);
 		
-		/*
 		// Single transaction
 		//Address address = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // Josi
 		//Address address = Address.fromBase58(netParams, "mjzn7TW98zhWoguqS4nDmnDoJpvqEEdnwm"); // Jorge
@@ -60,8 +59,8 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
 		
+		/*
 		// Multisignature NM tx
 		Address addressC = Address.fromBase58(netParams, "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"); // C Josi
 		Address addressV = Address.fromBase58(netParams, "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"); // V Pepe
@@ -100,6 +99,7 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
 		// NM - Step 2
 		/*
