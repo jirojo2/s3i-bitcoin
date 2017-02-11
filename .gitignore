@@ -1,6 +1,9 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
+### Bitcoin data ###
+bitcoin/
+
 ### STS ###
 .apt_generated
 .classpath
