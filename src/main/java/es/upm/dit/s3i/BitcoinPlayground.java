@@ -99,6 +99,7 @@ public class BitcoinPlayground {
 		}
 		*/
 		
+		/*
 		// NM - Step 2
 		String T1Hash = "c6fbe96c6db9312c2daf15c258d4ad3dd213219eae125c88a1bede55607ff44c";
 		String finalReceiver = "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"; // V pepe
@@ -121,6 +122,32 @@ public class BitcoinPlayground {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
+		
+		// NM - Step 2bis: R
+		String T1Hash = "c6fbe96c6db9312c2daf15c258d4ad3dd213219eae125c88a1bede55607ff44c";
+		String T2Hash = "677c230f70ce28ac4bde339378db92a810850debff03b4ea50a7ca3df241bfac";
+		String addressV = "n1Q711Na2CodhzthSuuojN62cszSTxkDEG"; // V pepe
+		String finalReceiver = "mssCFZ4vM1Qzo2t3JUStA2VmLC5j3KHvmh"; // C josi
+		
+		try {
+			Transaction T1 = receiveTransaction(netParams, T1Hash);
+			TransactionOutput output1 = getMultiSigOutput(T1);
+			Transaction T2 = receiveTransaction(netParams, T2Hash);
+			TransactionInput input2 = T2.getInput(0);
+			TransactionSignature signature_1 = receiveSignature(netParams, T2Hash, addressV);
+			TransactionSignature signature_2 = sign1(netParams, walletPrefix, T2, output1);
+			
+			Script inputScript = ScriptBuilder.createMultiSigInputScript(signature_1, signature_2);
+			input2.setScriptSig(inputScript);
+			input2.verify(output1);
+			send(netParams, T2);
+
+		} catch (IOException | ExecutionException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private void createAddress(NetworkParameters netParams) {
@@ -198,6 +225,16 @@ public class BitcoinPlayground {
 		return new Transaction(netParams, bytes);
 	}
 	
+	private TransactionSignature receiveSignature(NetworkParameters netParams, String transactionHash, String address) throws IOException {
+		File file = new File(walletDirectory, transactionHash + "_" + address + ".sig");
+		int size = (int) file.length();
+		byte[] bytes = new byte[size];
+		InputStream stream = new FileInputStream(file);
+		stream.read(bytes);
+		stream.close();
+		return TransactionSignature.decodeFromBitcoin(bytes, false, false);
+	}
+	
 	private TransactionOutput getMultiSigOutput(Transaction transaction) {
 		for (TransactionOutput output: transaction.getOutputs()) {
 			Script script = output.getScriptPubKey();
@@ -235,6 +272,16 @@ public class BitcoinPlayground {
 		}
 		return null;
 	}
+	
+	void send(NetworkParameters netParams, Transaction transaction) throws ExecutionException, InterruptedException {
+		WalletAppKit kit = new WalletAppKit(netParams, walletDirectory, walletPrefix);
+		kit.startAsync();
+		kit.awaitRunning();
+		PeerGroup peerGroup = kit.peerGroup();
+		ListenableFuture<Transaction> future = peerGroup.broadcastTransaction(transaction).future();
+		future.get();
+	}
+
 
 	public static String bytesToHex(byte[] bytes) {
 		char[] hexArray = "0123456789ABCDEF".toCharArray();
